@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const PRIVACY_POLICY_URL = "https://eudaimonia-support.vercel.app/privacy";
+const PRIVACY_POLICY_URL = "https://eudaimonia-ruby.vercel.app/privacy";
 
 export default function SignUpScreen() {
   const router = useRouter();

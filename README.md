@@ -4,10 +4,11 @@ A calm, modular personal lifestyle tracker built with Expo and React Native.
 
 ## Overview
 
-Eudaimonia is a comprehensive lifestyle tracking app with five main modules:
+Eudaimonia is a comprehensive lifestyle tracking app with six main modules:
 
-- 🥗 **Food** - Meal planning, grocery lists, and food logging
-- 💰 **Finances** - Expense tracking and financial management
-- 📈 **Habits** - Daily habit tracking and visualization
+- 🥗 **Food Planner** - Meal planning, grocery lists, and food logging
+- 📅 **Day Planner** - Schedule your day with time blocks and recurring events
+- 💰 **Finances** - Track spending, manage expenses by category, view spending breakdowns with charts, and manage recurring subscriptions
+- ✓ **Habits** - Daily habit tracking with weekly grids and visualization
 - 📝 **Notes** - Rich text notes with Apple Notes-inspired design
-- 🧘 **Stretch** - Guided stretching routines with TTS and timers
+- 🎯 **Priorities** - Weekly priority tracking and visualization
