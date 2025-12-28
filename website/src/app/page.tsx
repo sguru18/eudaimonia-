@@ -69,7 +69,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">🌱</span>
             <span className="text-2xl font-semibold text-gray-800 tracking-tight">
-              Eudaimonia
+              Eudaimonia!
             </span>
           </div>
           <Link
@@ -90,7 +90,7 @@ export default function Home() {
           </span>
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Eudaimonia helps you build healthy habits, plan your days, track your
+          Eudaimonia! helps you build healthy habits, plan your days, track your
           priorities, and live with intention. Everything you need for personal
           growth, beautifully organized.
         </p>
@@ -131,7 +131,7 @@ export default function Home() {
       {/* How to Use Section */}
       <section className="px-6 py-16 max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">
-          How to use Eudaimonia
+          How to use Eudaimonia!
         </h2>
         <p className="text-gray-600 text-center mb-12 max-w-xl mx-auto">
           Getting started is simple. Here&apos;s how to make the most of the
@@ -235,14 +235,20 @@ export default function Home() {
             Privacy & Data
           </h2>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Your privacy matters to us. Eudaimonia stores your data securely and
-            never shares your personal information with third parties. All data
-            is encrypted and stored safely.
+            Your privacy matters to us. Eudaimonia! stores your data securely
+            and never shares your personal information with third parties. All
+            data is encrypted and stored safely.
           </p>
-          <p className="text-gray-600 leading-relaxed">
+          <p className="text-gray-600 leading-relaxed mb-4">
             You can delete your account and all associated data at any time from
             within the app settings.
           </p>
+          <Link
+            href="/privacy"
+            className="text-teal-600 hover:text-teal-700 font-medium transition-colors"
+          >
+            Read our full Privacy Policy →
+          </Link>
         </div>
       </section>
 
@@ -252,11 +258,26 @@ export default function Home() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-2xl">🌱</span>
             <span className="text-xl font-semibold text-gray-800">
-              Eudaimonia
+              Eudaimonia!
             </span>
           </div>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Link
+              href="/privacy"
+              className="text-gray-500 hover:text-teal-600 text-sm transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-gray-300">•</span>
+            <Link
+              href="#support"
+              className="text-gray-500 hover:text-teal-600 text-sm transition-colors"
+            >
+              Support
+            </Link>
+          </div>
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Eudaimonia. All rights reserved.
+            © {new Date().getFullYear()} Eudaimonia! All rights reserved.
           </p>
           <p className="text-gray-400 text-sm mt-2">
             Built with ♥ for a balanced life
