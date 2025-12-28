@@ -21,11 +21,14 @@ interface InputProps {
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   secureTextEntry?: boolean;
+  showPasswordToggle?: boolean;
   editable?: boolean;
   style?: ViewStyle;
   inputStyle?: TextStyle;
   onNotePress?: () => void;
   hasNote?: boolean;
+  autoComplete?: string;
+  textContentType?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -39,13 +42,19 @@ export const Input: React.FC<InputProps> = ({
   keyboardType = 'default',
   autoCapitalize = 'sentences',
   secureTextEntry = false,
+  showPasswordToggle = false,
   editable = true,
   style,
   inputStyle,
   onNotePress,
   hasNote = false,
+  autoComplete,
+  textContentType,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const shouldHideText = secureTextEntry && !isPasswordVisible;
 
   return (
     <View style={[styles.container, style]}>
@@ -61,19 +70,33 @@ export const Input: React.FC<InputProps> = ({
           numberOfLines={multiline ? numberOfLines : 1}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={shouldHideText}
           editable={editable}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          autoComplete={autoComplete as any}
+          textContentType={textContentType as any}
           style={[
             styles.input,
             multiline && styles.inputMultiline,
             isFocused && styles.inputFocused,
             error && styles.inputError,
             !editable && styles.inputDisabled,
+            (showPasswordToggle || onNotePress) && styles.inputWithButton,
             inputStyle,
           ]}
         />
+        
+        {showPasswordToggle && secureTextEntry && (
+          <TouchableOpacity 
+            style={styles.eyeButton} 
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Text style={styles.eyeIcon}>
+              {isPasswordVisible ? '👁️' : '👁️‍🗨️'}
+            </Text>
+          </TouchableOpacity>
+        )}
         
         {onNotePress && (
           <TouchableOpacity 
@@ -135,6 +158,20 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.error,
     marginTop: spacing.xs,
+  },
+  inputWithButton: {
+    paddingRight: 48,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: spacing.sm,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    padding: spacing.xs,
+  },
+  eyeIcon: {
+    fontSize: 20,
   },
   noteButton: {
     position: 'absolute',

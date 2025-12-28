@@ -5,7 +5,7 @@ import {
   type FeatureKey,
 } from "@/src/contexts/FeatureTogglesContext";
 import { colors, spacing, typography } from "@/src/theme";
-import React from "react";
+import React, { useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -29,12 +29,11 @@ const FEATURE_INFO: Partial<
     icon: "📅",
     description: "Daily schedule & time blocks",
   },
-  // Finances - commented out for App Store submission, will restore later
-  // finances: {
-  //   label: "Finances",
-  //   icon: "💰",
-  //   description: "Expense tracking & budgeting",
-  // },
+  finances: {
+    label: "Finances",
+    icon: "💰",
+    description: "Expense tracking & budgeting",
+  },
   habits: {
     label: "Habits",
     icon: "✓",
@@ -59,8 +58,9 @@ const FEATURE_INFO: Partial<
 };
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const { features, toggleFeature } = useFeatureToggles();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -73,6 +73,46 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            // Second confirmation for extra safety
+            Alert.alert(
+              "Final Confirmation",
+              "This will permanently delete your account and all associated data. Are you absolutely sure?",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Yes, Delete My Account",
+                  style: "destructive",
+                  onPress: async () => {
+                    setIsDeleting(true);
+                    const { error } = await deleteAccount();
+                    setIsDeleting(false);
+                    
+                    if (error) {
+                      Alert.alert(
+                        "Error",
+                        "Failed to delete account. Please try again or contact support."
+                      );
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -120,8 +160,8 @@ export default function ProfileScreen() {
           <Card style={styles.featuresCard}>
             {(Object.keys(FEATURE_INFO) as FeatureKey[])
               .filter((featureKey) => {
-                // Skip finances and stretch - commented out for App Store submission
-                return featureKey !== "finances" && featureKey !== "stretch";
+                // Skip stretch - commented out for App Store submission
+                return featureKey !== "stretch";
               })
               .map((featureKey) => {
                 const feature = FEATURE_INFO[featureKey];
@@ -157,6 +197,28 @@ export default function ProfileScreen() {
             color={colors.error}
             style={styles.signOutButton}
           />
+
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+            <Text style={styles.dangerZoneText}>
+              Once you delete your account, there is no going back. Please be certain.
+            </Text>
+            <Button
+              title={isDeleting ? "Deleting..." : "Delete Account"}
+              onPress={handleDeleteAccount}
+              variant="outline"
+              color={colors.error}
+              style={styles.deleteButton}
+              disabled={isDeleting}
+            />
+          </View>
+
+          <View style={styles.contactNote}>
+            <Text style={styles.contactText}>
+              📧 For feedback, bugs, or feature requests, email us at{" "}
+              <Text style={styles.contactEmail}>shguru110@gmail.com</Text>
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -248,5 +310,41 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     marginTop: spacing.lg,
+  },
+  dangerZone: {
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.error + "30",
+  },
+  dangerZoneTitle: {
+    ...typography.label,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  dangerZoneText: {
+    ...typography.caption,
+    color: colors.textLight,
+    marginBottom: spacing.md,
+    lineHeight: 18,
+  },
+  deleteButton: {
+    borderColor: colors.error + "50",
+  },
+  contactNote: {
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+    alignItems: "center",
+  },
+  contactText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  contactEmail: {
+    color: colors.teal,
+    fontWeight: "600",
   },
 });

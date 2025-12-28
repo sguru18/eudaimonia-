@@ -34,7 +34,7 @@ const STORAGE_KEY = "feature_toggles";
 const DEFAULT_FEATURES: FeatureToggles = {
   food: true,
   planner: true,
-  finances: false, // Commented out for App Store submission, will restore later
+  finances: true,
   habits: true,
   notes: true,
   stretch: false, // Commented out for App Store submission, will restore later

@@ -10,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,6 +80,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const deleteAccount = async () => {
+    try {
+      if (!user) {
+        return { error: new Error('No user logged in') };
+      }
+
+      // Call the Supabase RPC function to delete user data and account
+      // This function should be created in Supabase with SECURITY DEFINER
+      const { error: rpcError } = await supabase.rpc('delete_user_account');
+      
+      if (rpcError) {
+        // If the RPC function doesn't exist, we'll just delete user data from tables
+        // and sign out (user will remain in auth.users but can't access anything)
+        console.warn('RPC function not found, attempting manual data deletion:', rpcError);
+        
+        // Delete user data from all tables (RLS should allow this)
+        const tables = [
+          'habits',
+          'habit_logs', 
+          'notes',
+          'meal_plans',
+          'time_blocks',
+          'priorities',
+          'weekly_priority_scores',
+        ];
+        
+        for (const table of tables) {
+          await supabase.from(table).delete().eq('user_id', user.id);
+        }
+      }
+
+      // Sign out the user
+      await supabase.auth.signOut();
+      
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -86,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signIn,
     signOut,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

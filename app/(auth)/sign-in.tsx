@@ -50,9 +50,10 @@ export default function SignInScreen() {
         >
           <View style={styles.content}>
             <Text style={styles.icon}>🌱</Text>
-            <Text style={styles.title}>Eudaimonia</Text>
+            <Text style={styles.title}>Eudaimonia!</Text>
             <Text style={styles.definition}>
-              defined as: a true feeling of joy independent of all things
+              Described by Aristotle as a true feeling of joy, independent of
+              all things.
             </Text>
 
             <Card style={styles.card}>
@@ -73,6 +74,7 @@ export default function SignInScreen() {
                 onChangeText={setPassword}
                 placeholder="••••••••"
                 secureTextEntry
+                showPasswordToggle
                 autoCapitalize="none"
                 autoComplete="password"
                 textContentType="password"

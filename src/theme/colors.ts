@@ -20,6 +20,7 @@ export const colors = {
   mint: '#9EC6C6', // Mint
   lavender: '#E5E0E8', // Soft lavender
   sage: '#8FA87D', // Sage
+  purple: '#8B7B9E', // Soft purple (for recurring events)
   
   // UI States
   active: '#5A7F7A', // Teal for active states

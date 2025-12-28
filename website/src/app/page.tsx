@@ -14,6 +14,12 @@ const features = [
       "Organize your day with time blocks. Schedule tasks and activities with an intuitive visual planner.",
   },
   {
+    icon: "💰",
+    title: "Finances",
+    description:
+      "Track your spending with awareness. Log expenses by category, view spending breakdowns, and manage recurring subscriptions.",
+  },
+  {
     icon: "✓",
     title: "Habits",
     description:
@@ -91,8 +97,8 @@ export default function Home() {
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
           Eudaimonia! helps you build healthy habits, plan your days, track your
-          priorities, and live with intention. Everything you need for personal
-          growth, beautifully organized.
+          spending, manage your priorities, and live with intention. Everything
+          you need for personal growth, beautifully organized.
         </p>
         <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-gray-100">
           <span className="text-gray-500">Available on</span>
@@ -106,7 +112,7 @@ export default function Home() {
           Everything you need
         </h2>
         <p className="text-gray-600 text-center mb-12 max-w-xl mx-auto">
-          Five powerful tools, one simple app. Toggle features on or off to
+          Six powerful tools, one simple app. Toggle features on or off to
           customize your experience.
         </p>
 
@@ -191,6 +197,13 @@ export default function Home() {
               <span>
                 Plan your meals at the start of each week to save time and eat
                 healthier.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-xl">💰</span>
+              <span>
+                Log expenses as you spend to stay aware of your financial
+                habits. Review your spending breakdown weekly and monthly.
               </span>
             </li>
           </ul>

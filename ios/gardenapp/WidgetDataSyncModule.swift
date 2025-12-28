@@ -54,5 +54,25 @@ class WidgetDataSync: NSObject {
     
     resolver(true)
   }
+  
+  @objc
+  func syncFinanceToAppGroup(_ data: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
+    let appGroupIdentifier = "group.com.sriharigurugubelli.gardenapp"
+    
+    guard let sharedDefaults = UserDefaults(suiteName: appGroupIdentifier) else {
+      rejecter("APP_GROUP_ERROR", "Failed to access App Group: \(appGroupIdentifier)", nil)
+      return
+    }
+    
+    sharedDefaults.set(data, forKey: "finance_widget_data")
+    sharedDefaults.synchronize()
+    
+    // Reload widget timelines
+    if #available(iOS 14.0, *) {
+      WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
+    }
+    
+    resolver(true)
+  }
 }
 

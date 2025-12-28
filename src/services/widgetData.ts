@@ -4,13 +4,19 @@
  */
 
 import { format, startOfWeek } from 'date-fns';
-import { habitService, habitCompletionService } from './database';
+import { habitService, habitCompletionService, expenseService } from './database';
 import type { Habit } from '../types';
 
 export interface UnfinishedHabit {
   id: string;
   name: string;
   color: string;
+}
+
+export interface FinanceWidgetData {
+  todayTotal: number;
+  expenseCount: number;
+  lastUpdated: string;
 }
 
 /**
@@ -63,6 +69,31 @@ export async function getUnfinishedHabitsForToday(): Promise<UnfinishedHabit[]> 
 }
 
 /**
+ * Get today's spending data for finance widget
+ */
+export async function getTodaySpendingData(): Promise<FinanceWidgetData> {
+  try {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const expenses = await expenseService.getByDate(today);
+    
+    const todayTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      todayTotal,
+      expenseCount: expenses.length,
+      lastUpdated: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Error getting today spending data:', error);
+    return {
+      todayTotal: 0,
+      expenseCount: 0,
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+}
+
+/**
  * Get widget data as JSON string for sharing with widgets
  */
 export async function getWidgetDataJson(): Promise<string> {
@@ -71,5 +102,13 @@ export async function getWidgetDataJson(): Promise<string> {
     unfinishedHabits,
     lastUpdated: new Date().toISOString(),
   });
+}
+
+/**
+ * Get finance widget data as JSON string
+ */
+export async function getFinanceWidgetDataJson(): Promise<string> {
+  const data = await getTodaySpendingData();
+  return JSON.stringify(data);
 }
 

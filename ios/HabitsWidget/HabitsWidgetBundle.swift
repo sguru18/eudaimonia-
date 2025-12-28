@@ -13,5 +13,6 @@ struct HabitsWidgetBundle: WidgetBundle {
     var body: some Widget {
         HabitsWidget()
         PlannerWidget()
+        FinanceWidget()
     }
 }

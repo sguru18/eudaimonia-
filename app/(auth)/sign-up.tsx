@@ -1,40 +1,54 @@
-import React, { useState } from 'react';
+import { Button, Card, Input } from "@/src/components";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { colors, spacing, typography } from "@/src/theme";
+import { Link, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
-  Alert,
-} from 'react-native';
-import { useRouter, Link } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { colors, typography, spacing, borderRadius } from '@/src/theme';
-import { Input, Button, Card } from '@/src/components';
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const PRIVACY_POLICY_URL = "https://eudaimonia-support.vercel.app/privacy";
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const openPrivacyPolicy = () => {
+    Linking.openURL(PRIVACY_POLICY_URL);
+  };
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (!acceptedPrivacyPolicy) {
+      Alert.alert("Error", "Please accept the Privacy Policy to continue");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
 
@@ -43,15 +57,15 @@ export default function SignUpScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Sign Up Failed', error.message);
+      Alert.alert("Sign Up Failed", error.message);
     } else {
       Alert.alert(
-        'Success!',
-        'Account created successfully. You can now sign in.',
+        "Success!",
+        "Account created successfully. You can now sign in.",
         [
           {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/sign-in'),
+            text: "OK",
+            onPress: () => router.replace("/(auth)/sign-in"),
           },
         ]
       );
@@ -59,9 +73,9 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -72,7 +86,7 @@ export default function SignUpScreen() {
             <Text style={styles.icon}>🌱</Text>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
-              Start your journey to mindful living
+              Start your journey of mindful living
             </Text>
 
             <Card style={styles.card}>
@@ -93,6 +107,7 @@ export default function SignUpScreen() {
                 onChangeText={setPassword}
                 placeholder="••••••••"
                 secureTextEntry
+                showPasswordToggle
                 autoCapitalize="none"
                 autoComplete="password"
                 textContentType="newPassword"
@@ -104,10 +119,34 @@ export default function SignUpScreen() {
                 onChangeText={setConfirmPassword}
                 placeholder="••••••••"
                 secureTextEntry
+                showPasswordToggle
                 autoCapitalize="none"
                 autoComplete="password"
                 textContentType="newPassword"
               />
+
+              <TouchableOpacity
+                style={styles.privacyRow}
+                onPress={() => setAcceptedPrivacyPolicy(!acceptedPrivacyPolicy)}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    acceptedPrivacyPolicy && styles.checkboxChecked,
+                  ]}
+                >
+                  {acceptedPrivacyPolicy && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </View>
+                <Text style={styles.privacyText}>
+                  I have read and agree to the{" "}
+                  <Text style={styles.privacyLink} onPress={openPrivacyPolicy}>
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </TouchableOpacity>
 
               <Button
                 title="Create Account"
@@ -115,6 +154,7 @@ export default function SignUpScreen() {
                 loading={loading}
                 color={colors.teal}
                 style={styles.button}
+                disabled={!acceptedPrivacyPolicy}
               />
             </Card>
 
@@ -141,26 +181,26 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   content: {
     padding: spacing.xl,
   },
   icon: {
     fontSize: 64,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   title: {
     ...typography.headerLarge,
     color: colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.body,
     color: colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   card: {
@@ -170,9 +210,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   footerText: {
     ...typography.body,
@@ -181,7 +221,42 @@ const styles = StyleSheet.create({
   link: {
     ...typography.body,
     color: colors.teal,
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  privacyRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.border,
+    marginRight: spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  checkmark: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  privacyText: {
+    ...typography.caption,
+    color: colors.textLight,
+    flex: 1,
+    lineHeight: 20,
+  },
+  privacyLink: {
+    color: colors.teal,
+    fontWeight: "600",
   },
 });
-

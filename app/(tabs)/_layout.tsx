@@ -48,7 +48,6 @@ export default function TabLayout() {
           href: features.planner ? '/(tabs)/planner' : null,
         }}
       />
-      {/* Finances - commented out for App Store submission, will restore later */}
       <Tabs.Screen
         name="finances"
         options={{
@@ -56,7 +55,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <Text style={{ fontSize: 24 }}>{'💰'}</Text>
           ),
-          href: null, // Hidden for App Store submission
+          href: features.finances ? '/(tabs)/finances' : null,
         }}
       />
       <Tabs.Screen

@@ -32,18 +32,64 @@ export interface GroceryItem {
   updated_at: string;
 }
 
+// Expense Categories
+export interface ExpenseCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  is_default: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Expenses (with category reference)
 export interface Expense {
   id: string;
   user_id: string;
   amount: number;
-  category: string;
-  name: string;
-  notes?: string;
+  category_id: string;
+  description?: string;
   date: string;
-  is_recurring: boolean;
   created_at: string;
   updated_at: string;
 }
+
+// Expense with joined category data
+export interface ExpenseWithCategory extends Expense {
+  category?: ExpenseCategory;
+}
+
+// Subscriptions (recurring payments)
+export interface Subscription {
+  id: string;
+  user_id: string;
+  name: string;
+  amount: number;
+  category_id: string;
+  billing_day: number; // 1-31
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Subscription with joined category data
+export interface SubscriptionWithCategory extends Subscription {
+  category?: ExpenseCategory;
+}
+
+// Default expense categories with colors
+export const DEFAULT_EXPENSE_CATEGORIES = [
+  { name: 'Food', color: '#E07A5F' },
+  { name: 'Groceries', color: '#81B29A' },
+  { name: 'Transport', color: '#3D405B' },
+  { name: 'Entertainment', color: '#F2CC8F' },
+  { name: 'Shopping', color: '#9B5DE5' },
+  { name: 'Bills', color: '#00BBF9' },
+  { name: 'Health', color: '#00F5D4' },
+  { name: 'Misc', color: '#9B9B9B' },
+] as const;
 
 export interface Habit {
   id: string;
@@ -181,4 +227,20 @@ export interface TimeBlock {
   created_at: string;
   updated_at: string;
 }
+
+export interface RecurringTimeBlock {
+  id: string;
+  user_id: string;
+  title: string;
+  start_time: string; // HH:MM (24hr)
+  end_time: string; // HH:MM (24hr)
+  days_of_week: boolean[]; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Day names for display
+export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+export const DAY_NAMES_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 

@@ -4,6 +4,7 @@ import { FeatureTogglesProvider } from "@/src/contexts/FeatureTogglesContext";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 import "react-native-get-random-values";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -50,13 +51,15 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <FeatureTogglesProvider>
-          <RootLayoutNav />
-          <StatusBar style="dark" />
-        </FeatureTogglesProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <FeatureTogglesProvider>
+            <RootLayoutNav />
+            <StatusBar style="dark" />
+          </FeatureTogglesProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

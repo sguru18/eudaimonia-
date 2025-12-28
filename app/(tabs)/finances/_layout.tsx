@@ -14,18 +14,21 @@ export default function FinancesLayout() {
         options={{ title: 'Quick Add' }}
       />
       <Stack.Screen
-        name="expense-list"
-        options={{ title: 'Expenses' }}
+        name="overview"
+        options={{ title: 'Spending Overview' }}
       />
       <Stack.Screen
-        name="recurring-expenses"
-        options={{ title: 'Recurring' }}
+        name="categories"
+        options={{ title: 'Categories' }}
       />
       <Stack.Screen
-        name="export"
-        options={{ title: 'Export' }}
+        name="subscriptions"
+        options={{ title: 'Subscriptions' }}
+      />
+      <Stack.Screen
+        name="history"
+        options={{ title: 'History' }}
       />
     </Stack>
   );
 }
-

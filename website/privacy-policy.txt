@@ -19,6 +19,7 @@ We collect and store the content you create within the App, including but not li
 - Meal planning information
 - Daily planner entries
 - Priority lists and goals
+- Expense and financial tracking data (amounts, categories, descriptions, subscription information)
 
 1.3 Usage Data
 We may collect limited technical information to improve App performance, including:

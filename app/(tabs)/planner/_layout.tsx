@@ -10,6 +10,7 @@ export default function PlannerLayout() {
       }}
     >
       <Stack.Screen name="index" />
+      <Stack.Screen name="recurring" />
     </Stack>
   );
 }

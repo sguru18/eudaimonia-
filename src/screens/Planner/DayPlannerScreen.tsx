@@ -1,5 +1,7 @@
 import { useFocusEffect } from "@react-navigation/native";
-import { addDays, format } from "date-fns";
+import { Ionicons } from "@expo/vector-icons";
+import { addDays, format, getDay } from "date-fns";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,9 +16,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Header } from "../../components";
-import { timeBlockService } from "../../services/database";
+import { recurringTimeBlockService, timeBlockService } from "../../services/database";
 import { borderRadius, colors, spacing, typography } from "../../theme";
-import type { TimeBlock } from "../../types";
+import type { RecurringTimeBlock, TimeBlock } from "../../types";
 import { TimeBlockModal } from "./TimeBlockModal";
 
 const HOUR_HEIGHT = 60; // Height of each hour row in pixels
@@ -56,15 +58,18 @@ const formatTimeAMPM = (time: string): string => {
 
 export const DayPlannerScreen = () => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
+  const [recurringBlocks, setRecurringBlocks] = useState<RecurringTimeBlock[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<TimeBlock | null>(null);
 
   const dateString = format(currentDate, "yyyy-MM-dd");
+  const dayOfWeek = getDay(currentDate); // 0 = Sunday, 1 = Monday, etc.
 
   // Update current time indicator every minute
   useEffect(() => {
@@ -106,14 +111,18 @@ export const DayPlannerScreen = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const blocks = await timeBlockService.getByDate(dateString);
+      const [blocks, recurring] = await Promise.all([
+        timeBlockService.getByDate(dateString),
+        recurringTimeBlockService.getByDayOfWeek(dayOfWeek),
+      ]);
       setTimeBlocks(blocks);
+      setRecurringBlocks(recurring);
     } catch (error) {
       console.error("Error loading time blocks:", error);
     } finally {
       setLoading(false);
     }
-  }, [dateString]);
+  }, [dateString, dayOfWeek]);
 
   useEffect(() => {
     loadData();
@@ -180,6 +189,7 @@ export const DayPlannerScreen = () => {
           onPress: async () => {
             const success = await timeBlockService.delete(block.id);
             if (success) {
+              setModalVisible(false); // Close modal after deletion
               loadData();
             } else {
               Alert.alert("Error", "Failed to delete event");
@@ -221,7 +231,9 @@ export const DayPlannerScreen = () => {
     const startMinutes = timeToMinutes(block.start_time);
     const endMinutes = timeToMinutes(block.end_time);
     const top = minutesToPosition(startMinutes);
-    const height = Math.max(minutesToPosition(endMinutes - startMinutes), 30);
+    // Height is duration in minutes converted to pixels (not a position)
+    const durationMinutes = endMinutes - startMinutes;
+    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 30);
 
     return (
       <TouchableOpacity
@@ -249,13 +261,59 @@ export const DayPlannerScreen = () => {
     );
   };
 
+  // Render a recurring time block on the timeline
+  const renderRecurringBlock = (block: RecurringTimeBlock) => {
+    const startMinutes = timeToMinutes(block.start_time);
+    const endMinutes = timeToMinutes(block.end_time);
+    const top = minutesToPosition(startMinutes);
+    const durationMinutes = endMinutes - startMinutes;
+    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 30);
+
+    return (
+      <TouchableOpacity
+        key={`recurring-${block.id}`}
+        style={[
+          styles.timeBlock,
+          styles.recurringTimeBlock,
+          {
+            top,
+            height,
+            left: TIME_COLUMN_WIDTH + spacing.sm,
+            right: spacing.lg,
+          },
+        ]}
+        onPress={() => router.push("/(tabs)/planner/recurring")}
+        activeOpacity={0.8}
+      >
+        <View style={styles.recurringHeader}>
+          <Text style={styles.timeBlockTitle} numberOfLines={1}>
+            {block.title}
+          </Text>
+          <Ionicons name="repeat" size={12} color="rgba(255,255,255,0.8)" />
+        </View>
+        <Text style={styles.timeBlockTime}>
+          {formatTimeAMPM(block.start_time)} - {formatTimeAMPM(block.end_time)}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header Section */}
       <View style={styles.headerContent}>
-        <Header size="large" color={colors.teal}>
-          Day Planner
-        </Header>
+        <View style={styles.headerRow}>
+          <Header size="large" color={colors.teal}>
+            Day Planner
+          </Header>
+          <TouchableOpacity
+            style={styles.recurringButton}
+            onPress={() => router.push("/(tabs)/planner/recurring")}
+          >
+            <Ionicons name="repeat" size={20} color={colors.teal} />
+            <Text style={styles.recurringButtonText}>Recurring</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Date Navigation */}
         <View style={styles.dateNav}>
@@ -316,6 +374,9 @@ export const DayPlannerScreen = () => {
               </View>
             ))}
 
+            {/* Recurring time blocks */}
+            {recurringBlocks.map(renderRecurringBlock)}
+
             {/* Time blocks */}
             {timeBlocks.map(renderTimeBlock)}
 
@@ -373,6 +434,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  recurringButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.teal + "15",
+  },
+  recurringButtonText: {
+    ...typography.caption,
+    color: colors.teal,
+    fontWeight: "600",
   },
   dateNav: {
     flexDirection: "row",
@@ -465,6 +545,15 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: colors.teal,
     overflow: "hidden",
+  },
+  recurringTimeBlock: {
+    backgroundColor: colors.purple,
+    borderLeftColor: colors.purple,
+  },
+  recurringHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   timeBlockTitle: {
     ...typography.bodySmall,

@@ -14,17 +14,17 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card } from "../../components";
 import { borderRadius, colors, spacing, typography } from "../../theme";
-import type { TimeBlock } from "../../types";
+import type { RecurringTimeBlock } from "../../types";
+import { DAY_NAMES } from "../../types";
 
-interface TimeBlockModalProps {
+interface RecurringEventModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (
-    block: Omit<TimeBlock, "id" | "created_at" | "updated_at" | "user_id">
+    block: Omit<RecurringTimeBlock, "id" | "created_at" | "updated_at" | "user_id">
   ) => void;
   onDelete?: () => void;
-  initialBlock: TimeBlock | null;
-  date: string;
+  initialBlock: RecurringTimeBlock | null;
 }
 
 const HOURS_12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -38,7 +38,6 @@ const parseTime = (
   const isPM = h >= 12;
   let hour12 = h % 12;
   if (hour12 === 0) hour12 = 12;
-  // Round minute to nearest 5
   const roundedMinute = Math.round(m / 5) * 5;
   return { hour12, minute: roundedMinute >= 60 ? 55 : roundedMinute, isPM };
 };
@@ -83,8 +82,8 @@ const SimplePicker: React.FC<SimplePickerProps> = ({
 }) => {
   return (
     <View style={pickerStyles.container}>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={pickerStyles.scrollContent}
       >
@@ -146,13 +145,12 @@ const pickerStyles = StyleSheet.create({
   },
 });
 
-export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
+export const RecurringEventModal: React.FC<RecurringEventModalProps> = ({
   visible,
   onClose,
   onSave,
   onDelete,
   initialBlock,
-  date,
 }) => {
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState("");
@@ -164,6 +162,8 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
   const [endIsPM, setEndIsPM] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [daysOfWeek, setDaysOfWeek] = useState<boolean[]>([false, false, false, false, false, false, false]);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (visible) {
@@ -177,53 +177,45 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
         setEndHour12(end.hour12);
         setEndMinute(end.minute);
         setEndIsPM(end.isPM);
+        setDaysOfWeek([...initialBlock.days_of_week]);
+        setIsActive(initialBlock.is_active);
       } else {
-        // Default to current hour
-        const now = new Date();
-        const hour24 = now.getHours();
-        const minute = Math.round(now.getMinutes() / 5) * 5;
-        const isPM = hour24 >= 12;
-        let hour12 = hour24 % 12;
-        if (hour12 === 0) hour12 = 12;
-
-        // End time is 1 hour later
-        let endHour24 = Math.min(hour24 + 1, 23);
-        const endIsPM = endHour24 >= 12;
-        let endH12 = endHour24 % 12;
-        if (endH12 === 0) endH12 = 12;
-
+        // Default to 9am-10am, Mon-Fri
         setTitle("");
-        setStartHour12(hour12);
-        setStartMinute(minute >= 60 ? 55 : minute);
-        setStartIsPM(isPM);
-        setEndHour12(endH12);
-        setEndMinute(minute >= 60 ? 55 : minute);
-        setEndIsPM(endIsPM);
+        setStartHour12(9);
+        setStartMinute(0);
+        setStartIsPM(false);
+        setEndHour12(10);
+        setEndMinute(0);
+        setEndIsPM(false);
+        setDaysOfWeek([false, true, true, true, true, true, false]); // Mon-Fri default
+        setIsActive(true);
       }
       setShowStartPicker(false);
       setShowEndPicker(false);
     }
   }, [visible, initialBlock]);
 
-  // Convert to 24hr format for comparison and storage
+  const toggleDay = (index: number) => {
+    const newDays = [...daysOfWeek];
+    newDays[index] = !newDays[index];
+    setDaysOfWeek(newDays);
+  };
+
   const startTime24 = formatTime24(startHour12, startMinute, startIsPM);
   const endTime24 = formatTime24(endHour12, endMinute, endIsPM);
 
   const handleSave = () => {
-    if (!title.trim()) {
-      return;
-    }
-
-    // Validate that end time is after start time
-    if (startTime24 >= endTime24) {
-      return;
-    }
+    if (!title.trim()) return;
+    if (startTime24 >= endTime24) return;
+    if (!daysOfWeek.some(d => d)) return; // At least one day selected
 
     onSave({
       title: title.trim(),
-      date,
       start_time: startTime24,
       end_time: endTime24,
+      days_of_week: daysOfWeek,
+      is_active: isActive,
     });
   };
 
@@ -250,7 +242,6 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
         </Pressable>
       </View>
 
-      {/* Hour picker */}
       <View style={styles.pickerRow}>
         <Text style={styles.pickerLabel}>Hour</Text>
         <SimplePicker
@@ -261,7 +252,6 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
         />
       </View>
 
-      {/* Minute picker */}
       <View style={styles.pickerRow}>
         <Text style={styles.pickerLabel}>Minute</Text>
         <SimplePicker
@@ -271,7 +261,6 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
         />
       </View>
 
-      {/* AM/PM picker */}
       <View style={styles.ampmRow}>
         <Pressable
           style={[styles.ampmButton, !isPM && styles.ampmButtonSelected]}
@@ -293,7 +282,7 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
     </View>
   );
 
-  const isValid = title.trim() && startTime24 < endTime24;
+  const isValid = title.trim() && startTime24 < endTime24 && daysOfWeek.some(d => d);
 
   return (
     <Modal
@@ -312,7 +301,7 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>
-              {initialBlock ? "Edit Event" : "New Event"}
+              {initialBlock ? "Edit Recurring Event" : "New Recurring Event"}
             </Text>
             <TouchableOpacity onPress={handleSave} disabled={!isValid}>
               <Text
@@ -337,10 +326,39 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
                 style={styles.input}
                 value={title}
                 onChangeText={setTitle}
-                placeholder="Enter event title..."
+                placeholder="e.g., Morning Class, Team Meeting..."
                 placeholderTextColor={colors.textMuted}
                 autoFocus={!initialBlock}
               />
+            </Card>
+
+            {/* Days of Week */}
+            <Card style={styles.inputCard}>
+              <Text style={styles.label}>Repeat On</Text>
+              <View style={styles.daysContainer}>
+                {DAY_NAMES.map((day, index) => (
+                  <Pressable
+                    key={day}
+                    style={[
+                      styles.dayButton,
+                      daysOfWeek[index] && styles.dayButtonSelected,
+                    ]}
+                    onPress={() => toggleDay(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.dayText,
+                        daysOfWeek[index] && styles.dayTextSelected,
+                      ]}
+                    >
+                      {day}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              {!daysOfWeek.some(d => d) && (
+                <Text style={styles.hintText}>Select at least one day</Text>
+              )}
             </Card>
 
             {/* Start Time */}
@@ -385,9 +403,7 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
                 <Text style={styles.timeButtonText}>
                   {formatTimeDisplay(endHour12, endMinute, endIsPM)}
                 </Text>
-                <Text style={styles.timeArrow}>
-                  {showEndPicker ? "▲" : "▼"}
-                </Text>
+                <Text style={styles.timeArrow}>{showEndPicker ? "▲" : "▼"}</Text>
               </TouchableOpacity>
               {showEndPicker &&
                 renderTimePicker(
@@ -408,10 +424,40 @@ export const TimeBlockModal: React.FC<TimeBlockModalProps> = ({
               </Text>
             )}
 
+            {/* Active Toggle */}
+            {initialBlock && (
+              <Card style={styles.inputCard}>
+                <View style={styles.toggleRow}>
+                  <Text style={styles.label}>Active</Text>
+                  <Pressable
+                    style={[
+                      styles.toggleButton,
+                      isActive && styles.toggleButtonActive,
+                    ]}
+                    onPress={() => setIsActive(!isActive)}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleText,
+                        isActive && styles.toggleTextActive,
+                      ]}
+                    >
+                      {isActive ? "ON" : "OFF"}
+                    </Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.hintText}>
+                  {isActive
+                    ? "This event will appear on your calendar"
+                    : "This event is paused and won't appear"}
+                </Text>
+              </Card>
+            )}
+
             {/* Delete Button */}
             {initialBlock && onDelete && (
               <Button
-                title="Delete Event"
+                title="Delete Recurring Event"
                 onPress={onDelete}
                 variant="outline"
                 color={colors.error}
@@ -485,6 +531,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     textAlignVertical: "center",
+  },
+  daysContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: spacing.xs,
+  },
+  dayButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+  },
+  dayButtonSelected: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  dayText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  dayTextSelected: {
+    color: colors.white,
+  },
+  hintText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
   },
   timeButton: {
     flexDirection: "row",
@@ -575,6 +652,31 @@ const styles = StyleSheet.create({
   ampmTextSelected: {
     color: colors.white,
   },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  toggleButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  toggleButtonActive: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  toggleTextActive: {
+    color: colors.white,
+  },
   errorText: {
     ...typography.caption,
     color: colors.error,
@@ -583,5 +685,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     marginTop: spacing.lg,
+    marginBottom: spacing.xl,
   },
 });
+
