@@ -14,16 +14,26 @@ Check it out on the App Store!
 </p>
 
 - 📅 **Day Planner** - Schedule your day with time blocks and recurring events
-  <p align="center">
+<p align="center">
   <img src="assets/images/one.jpg" width="300" />
 </p>
+
 - ✓ **Habits** - Daily habit tracking with weekly grids and visualization
-  <p align="center">
+<p align="center">
   <img src="assets/images/five.jpg" width="300" />
 </p>
+
 - 📝 **Notes** - Rich text notes with Apple Notes-inspired design
+<p align="center">
+  <img src="assets/images/eight.jpg" width="300" />
+</p>
+
 - 🎯 **Priorities** - Weekly priority tracking and visualization
   <p align="center">
   <img src="assets/images/four.jpg" width="300" />
 </p>
+
 - 💰 **Finances** - Track spending, manage expenses by category, view spending breakdowns with charts, and manage recurring subscriptions
+<p align="center">
+  <img src="assets/images/seven.jpg" width="300" />
+</p>
