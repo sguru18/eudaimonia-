@@ -9,12 +9,12 @@ Check it out on the App Store!
 ## Modules
 
 - 🥗 **Food Planner** - Meal planning, grocery lists, and food logging
-  ![Project Demo Image](assets/images/siz.jpg)
+  <img src="assets/images/siz.jpg" width="300" />
 - 📅 **Day Planner** - Schedule your day with time blocks and recurring events
-  ![Project Demo Image](assets/images/one.jpg)
+  <img src="assets/images/one.jpg" width="300" />
 - ✓ **Habits** - Daily habit tracking with weekly grids and visualization
-  ![Project Demo Image](assets/images/five.jpg)
+  <img src="assets/images/five.jpg" width="300" />
 - 📝 **Notes** - Rich text notes with Apple Notes-inspired design
 - 🎯 **Priorities** - Weekly priority tracking and visualization
-  ![Project Demo Image](assets/images/four.jpg)
+  <img src="assets/images/four.jpg" width="300" />
 - 💰 **Finances** - Track spending, manage expenses by category, view spending breakdowns with charts, and manage recurring subscriptions
