@@ -1,24 +1,62 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { OnboardingModal } from "@/src/components";
+import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
+import { FeatureTogglesProvider } from "@/src/contexts/FeatureTogglesContext";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect } from "react";
+import "react-native-gesture-handler";
+import "react-native-get-random-values";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import "react-native-url-polyfill/auto";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  initialRouteName: "index",
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootLayoutNav() {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!user && !inAuthGroup) {
+      // Redirect to sign-in if not authenticated
+      router.replace("/(auth)/sign-in");
+    } else if (user && inAuthGroup) {
+      // Redirect to app if authenticated
+      router.replace("/(tabs)/food");
+    }
+  }, [user, segments, loading]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Modal" }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <OnboardingModal userId={user?.id} />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <FeatureTogglesProvider>
+          <RootLayoutNav />
+          <StatusBar style="dark" />
+        </FeatureTogglesProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
