@@ -1,18 +1,15 @@
 /**
  * Widget Data Sync Service
- * Syncs widget data to shared storage for iOS App Groups and Android SharedPreferences
+ * Syncs planner widget data to shared storage for iOS App Groups and Android SharedPreferences
  */
 
 import { Platform, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getWidgetDataJson, getFinanceWidgetDataJson } from './widgetData';
 import { getPlannerWidgetDataJSON } from './plannerWidgetData';
 
 // iOS App Group identifier (must match the one in Xcode)
 const IOS_APP_GROUP = 'group.com.sriharigurugubelli.gardenapp';
-const WIDGET_DATA_KEY = '@garden/widget_data';
 const PLANNER_WIDGET_DATA_KEY = '@garden/planner_widget_data';
-const FINANCE_WIDGET_DATA_KEY = '@garden/finance_widget_data';
 
 /**
  * Sync widget data to shared storage
@@ -20,41 +17,22 @@ const FINANCE_WIDGET_DATA_KEY = '@garden/finance_widget_data';
  */
 export async function syncWidgetDataToSharedStorage(): Promise<void> {
   try {
-    const widgetData = await getWidgetDataJson();
     const plannerWidgetData = await getPlannerWidgetDataJSON();
-    const financeWidgetData = await getFinanceWidgetDataJson();
     
     // Store in AsyncStorage as backup
-    await AsyncStorage.setItem(WIDGET_DATA_KEY, widgetData);
     await AsyncStorage.setItem(PLANNER_WIDGET_DATA_KEY, plannerWidgetData);
-    await AsyncStorage.setItem(FINANCE_WIDGET_DATA_KEY, financeWidgetData);
     
     if (Platform.OS === 'ios') {
       // For iOS, use native module to sync to App Groups
       const { WidgetDataSync } = NativeModules;
       if (WidgetDataSync) {
         try {
-          await WidgetDataSync.syncToAppGroup(widgetData);
-          // Also sync planner data with a different key
+          // Sync planner data
           if (WidgetDataSync.syncPlannerToAppGroup) {
             await WidgetDataSync.syncPlannerToAppGroup(plannerWidgetData);
           }
-          // Sync finance data
-          if (WidgetDataSync.syncFinanceToAppGroup) {
-            await WidgetDataSync.syncFinanceToAppGroup(financeWidgetData);
-          }
         } catch (error) {
           console.error('Failed to sync to App Group:', error);
-        }
-      }
-    } else if (Platform.OS === 'android') {
-      // For Android, use native module to sync to SharedPreferences
-      const { WidgetDataSync } = NativeModules;
-      if (WidgetDataSync) {
-        try {
-          await WidgetDataSync.syncToSharedPreferences(widgetData);
-        } catch (error) {
-          console.error('Failed to sync to SharedPreferences:', error);
         }
       }
     }
@@ -64,27 +42,46 @@ export async function syncWidgetDataToSharedStorage(): Promise<void> {
 }
 
 /**
- * Sync only finance widget data
- * Call this when expenses change
+ * Sync only planner widget data
+ * Call this when time blocks change
  */
-export async function syncFinanceWidgetData(): Promise<void> {
+export async function syncPlannerWidgetData(): Promise<void> {
   try {
-    const financeWidgetData = await getFinanceWidgetDataJson();
+    console.log('[WidgetSync] Starting planner widget data sync...');
+    const plannerWidgetData = await getPlannerWidgetDataJSON();
+    console.log('[WidgetSync] Got planner widget data, length:', plannerWidgetData.length);
+    console.log('[WidgetSync] Data preview:', plannerWidgetData.substring(0, 200));
     
-    await AsyncStorage.setItem(FINANCE_WIDGET_DATA_KEY, financeWidgetData);
+    await AsyncStorage.setItem(PLANNER_WIDGET_DATA_KEY, plannerWidgetData);
+    console.log('[WidgetSync] Saved to AsyncStorage');
     
     if (Platform.OS === 'ios') {
+      // Try to get the module - sometimes it's under a different name
       const { WidgetDataSync } = NativeModules;
-      if (WidgetDataSync?.syncFinanceToAppGroup) {
+      console.log('[WidgetSync] NativeModules object:', Object.keys(NativeModules));
+      console.log('[WidgetSync] NativeModules.WidgetDataSync:', WidgetDataSync);
+      console.log('[WidgetSync] WidgetDataSync type:', typeof WidgetDataSync);
+      console.log('[WidgetSync] Available methods:', WidgetDataSync ? Object.keys(WidgetDataSync) : 'none');
+      
+      if (WidgetDataSync && typeof WidgetDataSync.syncPlannerToAppGroup === 'function') {
         try {
-          await WidgetDataSync.syncFinanceToAppGroup(financeWidgetData);
+          console.log('[WidgetSync] Calling native syncPlannerToAppGroup...');
+          await WidgetDataSync.syncPlannerToAppGroup(plannerWidgetData);
+          console.log('[WidgetSync] ✅ Successfully synced to App Group');
         } catch (error) {
-          console.error('Failed to sync finance to App Group:', error);
+          console.error('[WidgetSync] ❌ Failed to sync planner to App Group:', error);
+          console.error('[WidgetSync] Error details:', JSON.stringify(error));
         }
+      } else {
+        console.warn('[WidgetSync] ⚠️ WidgetDataSync module not available - you may need to rebuild the app');
+        console.warn('[WidgetSync] The module was added/changed - please do a clean rebuild:');
+        console.warn('[WidgetSync]   1. In Xcode: Product → Clean Build Folder (Cmd+Shift+K)');
+        console.warn('[WidgetSync]   2. Rebuild the app');
       }
     }
   } catch (error) {
-    console.error('Error syncing finance widget data:', error);
+    console.error('[WidgetSync] ❌ Error syncing planner widget data:', error);
   }
 }
+
 

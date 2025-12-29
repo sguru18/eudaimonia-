@@ -10,14 +10,16 @@ import {
   Modal,
   Switch,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, typography, spacing, borderRadius } from '../../theme';
-import { Header, Card, Button } from '../../components';
+import { Header, Card, Button, LoadingSpinner } from '../../components';
 import { subscriptionService, expenseCategoryService } from '../../services/database';
 import type { Subscription, SubscriptionWithCategory, ExpenseCategory } from '../../types';
 
 export const SubscriptionsScreen = () => {
+  const insets = useSafeAreaInsets();
+  const [remountKey, setRemountKey] = useState(0);
   const [subscriptions, setSubscriptions] = useState<SubscriptionWithCategory[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +57,7 @@ export const SubscriptionsScreen = () => {
   useFocusEffect(
     useCallback(() => {
       loadData();
+      setRemountKey(prev => prev + 1);
     }, [loadData])
   );
 
@@ -176,9 +179,21 @@ export const SubscriptionsScreen = () => {
     }
   };
 
+  if (loading && subscriptions.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollView}>
+    <View style={styles.container}>
+      <ScrollView
+        key={remountKey}
+        style={styles.scrollView}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: spacing.xxxl }}
+      >
         <View style={styles.content}>
           <Header size="large" color={colors.finances}>
             Subscriptions
@@ -387,7 +402,7 @@ export const SubscriptionsScreen = () => {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

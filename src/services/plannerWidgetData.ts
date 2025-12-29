@@ -41,26 +41,48 @@ export async function getPlannerWidgetData(): Promise<PlannerWidgetData> {
   const now = new Date();
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   
+  console.log('[PlannerWidgetData] 📅 Fetching data for date:', dateString);
+  console.log('[PlannerWidgetData] 🕐 Current time:', currentTime);
+  
   try {
     const blocks = await timeBlockService.getByDate(dateString);
+    console.log('[PlannerWidgetData] 📋 Found', blocks.length, 'blocks for', dateString);
     
-    const widgetBlocks: WidgetTimeBlock[] = blocks.map(block => ({
-      id: block.id,
-      title: block.title,
-      startTime: block.start_time,
-      endTime: block.end_time,
-      startDisplay: formatTimeDisplay(block.start_time),
-      endDisplay: formatTimeDisplay(block.end_time),
-    }));
+    const widgetBlocks: WidgetTimeBlock[] = blocks.map(block => {
+      // Remove seconds from time if present (convert "13:00:00" to "13:00")
+      const formatTimeForWidget = (time: string) => {
+        return time.includes(':') && time.split(':').length === 3 
+          ? time.substring(0, 5) // Take only HH:MM
+          : time;
+      };
+      
+      return {
+        id: block.id,
+        title: block.title,
+        startTime: formatTimeForWidget(block.start_time),
+        endTime: formatTimeForWidget(block.end_time),
+        startDisplay: formatTimeDisplay(block.start_time),
+        endDisplay: formatTimeDisplay(block.end_time),
+      };
+    });
     
-    return {
+    console.log('[PlannerWidgetData] ✅ Created', widgetBlocks.length, 'widget blocks');
+    widgetBlocks.forEach((block, index) => {
+      console.log(`[PlannerWidgetData]   Block ${index + 1}: ${block.title} (${block.startTime} - ${block.endTime})`);
+    });
+    
+    const result = {
       date: dateString,
       dateDisplay: format(today, 'EEEE, MMM d'),
       blocks: widgetBlocks,
       currentTime,
     };
+    
+    console.log('[PlannerWidgetData] 📦 Final data:', JSON.stringify(result, null, 2).substring(0, 500));
+    
+    return result;
   } catch (error) {
-    console.error('[PlannerWidget] Error getting widget data:', error);
+    console.error('[PlannerWidgetData] ❌ Error getting widget data:', error);
     return {
       date: dateString,
       dateDisplay: format(today, 'EEEE, MMM d'),

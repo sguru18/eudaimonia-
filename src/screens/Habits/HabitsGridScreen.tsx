@@ -20,7 +20,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors, typography, spacing, borderRadius } from '../../theme';
 import { Header, Card, Button } from '../../components';
 import { habitService, habitCompletionService, habitReminderService } from '../../services/database';
-import { updateWidgetData } from '../../utils/widgetHelper';
 import type { Habit, HabitCompletion, HabitReminder } from '../../types';
 
 export const HabitsGridScreen = () => {
@@ -83,9 +82,6 @@ export const HabitsGridScreen = () => {
       
       setHabits(habitsData);
       setCompletions(completionsData);
-      
-      // Update widget data when habits are loaded
-      await updateWidgetData();
     } catch (error) {
       console.error('Error loading habits:', error);
     } finally {
@@ -148,9 +144,6 @@ export const HabitsGridScreen = () => {
       ]);
       setHabits(habitsData);
       setCompletions(completionsData);
-      
-      // Update widget data when habit completion changes
-      await updateWidgetData();
     } catch (error) {
       // Revert optimistic update on error
       Alert.alert('Error', 'Failed to update habit');

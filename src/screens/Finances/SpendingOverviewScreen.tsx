@@ -8,13 +8,13 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import Svg, { G, Path, Circle } from 'react-native-svg';
 import { colors, typography, spacing, borderRadius } from '../../theme';
-import { Header, Card, Button } from '../../components';
+import { Header, Card, Button, LoadingSpinner } from '../../components';
 import { expenseService, expenseCategoryService, subscriptionService } from '../../services/database';
 import type { ExpenseCategory, ExpenseWithCategory } from '../../types';
 
@@ -31,6 +31,8 @@ interface CategoryTotal {
 
 export const SpendingOverviewScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [remountKey, setRemountKey] = useState(0);
   const [filter, setFilter] = useState<FilterType>('month');
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState<ExpenseWithCategory[]>([]);
@@ -118,6 +120,7 @@ export const SpendingOverviewScreen = () => {
   useFocusEffect(
     useCallback(() => {
       loadData();
+      setRemountKey(prev => prev + 1);
     }, [loadData])
   );
 
@@ -183,10 +186,20 @@ export const SpendingOverviewScreen = () => {
 
   const dateRange = getDateRange();
 
+  if (loading && expenses.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <ScrollView
+        key={remountKey}
         style={styles.scrollView}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: spacing.xxxl }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadData} />
         }
@@ -310,7 +323,7 @@ export const SpendingOverviewScreen = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

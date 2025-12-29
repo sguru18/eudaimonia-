@@ -9,11 +9,11 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, typography, spacing, borderRadius } from '../../theme';
-import { Header, Card, Button } from '../../components';
+import { Header, Card, Button, LoadingSpinner } from '../../components';
 import { expenseCategoryService } from '../../services/database';
 import type { ExpenseCategory } from '../../types';
 
@@ -26,6 +26,8 @@ const PRESET_COLORS = [
 
 export const CategoriesScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [remountKey, setRemountKey] = useState(0);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -53,6 +55,7 @@ export const CategoriesScreen = () => {
   useFocusEffect(
     useCallback(() => {
       loadCategories();
+      setRemountKey(prev => prev + 1);
     }, [loadCategories])
   );
 
@@ -130,9 +133,21 @@ export const CategoriesScreen = () => {
     );
   };
 
+  if (loading && categories.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollView}>
+    <View style={styles.container}>
+      <ScrollView
+        key={remountKey}
+        style={styles.scrollView}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: spacing.xxxl }}
+      >
         <View style={styles.content}>
           <Header size="large" color={colors.finances}>
             Categories
@@ -263,7 +278,7 @@ export const CategoriesScreen = () => {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

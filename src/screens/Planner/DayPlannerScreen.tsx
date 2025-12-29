@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Header } from "../../components";
 import { recurringTimeBlockService, timeBlockService } from "../../services/database";
+import { syncPlannerWidgetData } from "../../services/widgetDataSync";
 import { borderRadius, colors, spacing, typography } from "../../theme";
 import type { RecurringTimeBlock, TimeBlock } from "../../types";
 import { TimeBlockModal } from "./TimeBlockModal";
@@ -26,6 +27,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
 const TIME_COLUMN_WIDTH = 50;
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const TOP_PADDING = 20; // Space above 12am
+const MIN_HEIGHT_FOR_TIME = 50; // Minimum height (px) to show time duration
 
 // Convert HH:MM to minutes from midnight
 const timeToMinutes = (time: string): number => {
@@ -117,6 +119,14 @@ export const DayPlannerScreen = () => {
       ]);
       setTimeBlocks(blocks);
       setRecurringBlocks(recurring);
+      
+      // Sync widget data if viewing today
+      const isToday = format(new Date(), "yyyy-MM-dd") === dateString;
+      if (isToday) {
+        syncPlannerWidgetData().catch((error) => {
+          console.error("Error syncing planner widget data:", error);
+        });
+      }
     } catch (error) {
       console.error("Error loading time blocks:", error);
     } finally {
@@ -190,7 +200,14 @@ export const DayPlannerScreen = () => {
             const success = await timeBlockService.delete(block.id);
             if (success) {
               setModalVisible(false); // Close modal after deletion
-              loadData();
+              await loadData();
+              // Sync widget data if the block was for today
+              const isToday = format(new Date(), "yyyy-MM-dd") === block.date;
+              if (isToday) {
+                await syncPlannerWidgetData().catch((error) => {
+                  console.error("Error syncing planner widget data:", error);
+                });
+              }
             } else {
               Alert.alert("Error", "Failed to delete event");
             }
@@ -207,7 +224,14 @@ export const DayPlannerScreen = () => {
       // Update existing
       const updated = await timeBlockService.update(selectedBlock.id, block);
       if (updated) {
-        loadData();
+        await loadData();
+        // Sync widget data if the block is for today
+        const isToday = format(new Date(), "yyyy-MM-dd") === block.date;
+        if (isToday) {
+          await syncPlannerWidgetData().catch((error) => {
+            console.error("Error syncing planner widget data:", error);
+          });
+        }
         setModalVisible(false);
       } else {
         Alert.alert("Error", "Failed to update event");
@@ -216,7 +240,14 @@ export const DayPlannerScreen = () => {
       // Create new
       const created = await timeBlockService.create(block);
       if (created) {
-        loadData();
+        await loadData();
+        // Sync widget data if the block is for today
+        const isToday = format(new Date(), "yyyy-MM-dd") === block.date;
+        if (isToday) {
+          await syncPlannerWidgetData().catch((error) => {
+            console.error("Error syncing planner widget data:", error);
+          });
+        }
         setModalVisible(false);
       } else {
         Alert.alert("Error", "Failed to create event");
@@ -234,6 +265,8 @@ export const DayPlannerScreen = () => {
     // Height is duration in minutes converted to pixels (not a position)
     const durationMinutes = endMinutes - startMinutes;
     const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 30);
+    const showTimeBelow = height >= MIN_HEIGHT_FOR_TIME;
+    const timeString = `${formatTimeAMPM(block.start_time)} - ${formatTimeAMPM(block.end_time)}`;
 
     return (
       <TouchableOpacity
@@ -251,12 +284,24 @@ export const DayPlannerScreen = () => {
         onLongPress={() => handleDeleteBlock(block)}
         activeOpacity={0.8}
       >
+        {showTimeBelow ? (
+          <>
         <Text style={styles.timeBlockTitle} numberOfLines={1}>
           {block.title}
         </Text>
         <Text style={styles.timeBlockTime}>
-          {formatTimeAMPM(block.start_time)} - {formatTimeAMPM(block.end_time)}
+              {timeString}
+            </Text>
+          </>
+        ) : (
+          <Text 
+            style={styles.timeBlockTitle} 
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {block.title} ({timeString})
         </Text>
+        )}
       </TouchableOpacity>
     );
   };
@@ -268,6 +313,8 @@ export const DayPlannerScreen = () => {
     const top = minutesToPosition(startMinutes);
     const durationMinutes = endMinutes - startMinutes;
     const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 30);
+    const showTimeBelow = height >= MIN_HEIGHT_FOR_TIME;
+    const timeString = `${formatTimeAMPM(block.start_time)} - ${formatTimeAMPM(block.end_time)}`;
 
     return (
       <TouchableOpacity
@@ -285,6 +332,8 @@ export const DayPlannerScreen = () => {
         onPress={() => router.push("/(tabs)/planner/recurring")}
         activeOpacity={0.8}
       >
+        {showTimeBelow ? (
+          <>
         <View style={styles.recurringHeader}>
           <Text style={styles.timeBlockTitle} numberOfLines={1}>
             {block.title}
@@ -292,8 +341,23 @@ export const DayPlannerScreen = () => {
           <Ionicons name="repeat" size={12} color="rgba(255,255,255,0.8)" />
         </View>
         <Text style={styles.timeBlockTime}>
-          {formatTimeAMPM(block.start_time)} - {formatTimeAMPM(block.end_time)}
+              {timeString}
+            </Text>
+          </>
+        ) : (
+          <View style={styles.recurringHeader}>
+            <View style={{ flex: 1, flexShrink: 1 }}>
+              <Text 
+                style={styles.timeBlockTitle} 
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {block.title} ({timeString})
         </Text>
+            </View>
+            <Ionicons name="repeat" size={12} color="rgba(255,255,255,0.8)" />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };

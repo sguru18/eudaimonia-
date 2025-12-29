@@ -2,7 +2,7 @@
   "expo": {
     "name": "Eudaimonia",
     "slug": "garden-app",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "gardenapp",
@@ -13,7 +13,8 @@
       "bundleIdentifier": "com.sriharigurugubelli.gardenapp",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -39,6 +40,14 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#FAFAF7"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#81B29A",
+          "sounds": []
         }
       ]
     ],

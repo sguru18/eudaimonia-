@@ -10,16 +10,17 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, typography, spacing, borderRadius } from '../../theme';
-import { Header, Card, Button } from '../../components';
+import { Header, Card, Button, LoadingSpinner } from '../../components';
 import { expenseService, expenseCategoryService } from '../../services/database';
-import { updateFinanceWidgetData } from '../../utils/widgetHelper';
 import type { ExpenseWithCategory, ExpenseCategory, Expense } from '../../types';
 
 export const ExpenseHistoryScreen = () => {
+  const insets = useSafeAreaInsets();
+  const [remountKey, setRemountKey] = useState(0);
   const [expenses, setExpenses] = useState<ExpenseWithCategory[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export const ExpenseHistoryScreen = () => {
   useFocusEffect(
     useCallback(() => {
       loadData();
+      setRemountKey(prev => prev + 1);
     }, [loadData])
   );
 
@@ -102,9 +104,6 @@ export const ExpenseHistoryScreen = () => {
 
       setShowModal(false);
       loadData();
-      
-      // Update widget
-      await updateFinanceWidgetData();
     } catch (error) {
       Alert.alert('Error', 'Failed to update expense');
       console.error(error);
@@ -127,9 +126,6 @@ export const ExpenseHistoryScreen = () => {
               await expenseService.delete(expense.id);
               setShowModal(false);
               loadData();
-              
-              // Update widget
-              await updateFinanceWidgetData();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete expense');
             }
@@ -141,10 +137,20 @@ export const ExpenseHistoryScreen = () => {
 
   const totalFiltered = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+  if (loading && expenses.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LoadingSpinner />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <ScrollView
+        key={remountKey}
         style={styles.scrollView}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: spacing.xxxl }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadData} />
         }
@@ -380,7 +386,7 @@ export const ExpenseHistoryScreen = () => {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

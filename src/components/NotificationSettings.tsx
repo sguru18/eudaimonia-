@@ -17,6 +17,7 @@ import { colors, typography, spacing, borderRadius } from '../theme';
 import { Card } from './Card';
 import { Button } from './Button';
 import { notificationSettingsService } from '../services/database';
+import { notificationService } from '../services/notifications';
 import type { NotificationSetting } from '../types';
 
 export const NotificationSettings: React.FC = () => {
@@ -24,10 +25,17 @@ export const NotificationSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingNotification, setEditingNotification] = useState<NotificationSetting | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [hasPermissions, setHasPermissions] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    checkPermissions();
   }, []);
+
+  const checkPermissions = async () => {
+    const granted = await notificationService.checkPermissions();
+    setHasPermissions(granted);
+  };
 
   const loadSettings = async () => {
     setLoading(true);
@@ -42,6 +50,24 @@ export const NotificationSettings: React.FC = () => {
   };
 
   const handleToggle = async (setting: NotificationSetting) => {
+    // If enabling, check permissions first
+    if (!setting.enabled) {
+      const granted = await notificationService.checkPermissions();
+      if (!granted) {
+        const requested = await notificationService.requestPermissions();
+        if (!requested) {
+          Alert.alert(
+            'Permissions Required',
+            'Please enable notifications in your device settings to receive reminders.',
+            [{ text: 'OK' }]
+          );
+          setHasPermissions(false);
+          return;
+        }
+        setHasPermissions(true);
+      }
+    }
+
     const updated = await notificationSettingsService.update(setting.id, {
       enabled: !setting.enabled,
     });
@@ -62,6 +88,21 @@ export const NotificationSettings: React.FC = () => {
 
   const handleSave = async (time: string, customText: string, type: string, days?: string[]) => {
     try {
+      // Check permissions before creating/updating
+      const granted = await notificationService.checkPermissions();
+      if (!granted) {
+        const requested = await notificationService.requestPermissions();
+        if (!requested) {
+          Alert.alert(
+            'Permissions Required',
+            'Please enable notifications in your device settings to receive reminders.',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+        setHasPermissions(true);
+      }
+
       if (editingNotification) {
         // Update existing
         const updated = await notificationSettingsService.update(editingNotification.id, {
@@ -126,9 +167,37 @@ export const NotificationSettings: React.FC = () => {
     );
   }
 
+  const handleRequestPermissions = async () => {
+    const granted = await notificationService.requestPermissions();
+    if (granted) {
+      setHasPermissions(true);
+      Alert.alert('Success', 'Notification permissions granted!');
+    } else {
+      Alert.alert(
+        'Permissions Denied',
+        'Please enable notifications in your device settings to receive reminders.'
+      );
+    }
+  };
+
+
   return (
     <>
       <Card style={styles.card}>
+        {!hasPermissions && (
+          <View style={styles.permissionBanner}>
+            <Text style={styles.permissionText}>
+              🔔 Notifications are disabled. Enable them to receive reminders.
+            </Text>
+            <Button
+              title="Enable Notifications"
+              onPress={handleRequestPermissions}
+              color={colors.teal}
+              style={styles.permissionButton}
+            />
+          </View>
+        )}
+        
         {settings.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>🔔</Text>
@@ -379,6 +448,21 @@ const NotificationEditor: React.FC<NotificationEditorProps> = ({
 const styles = StyleSheet.create({
   card: {
     padding: 0,
+  },
+  permissionBanner: {
+    padding: spacing.md,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  permissionText: {
+    ...typography.body,
+    color: colors.text,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  permissionButton: {
+    marginTop: spacing.xs,
   },
   loadingContainer: {
     padding: spacing.xl,

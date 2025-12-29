@@ -19,14 +19,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Card, Header } from "../../components";
+import { Button, Card, Header, LoadingSpinner } from "../../components";
 import {
   expenseCategoryService,
   expenseService,
 } from "../../services/database";
 import { borderRadius, colors, spacing, typography } from "../../theme";
 import type { ExpenseCategory } from "../../types";
-import { updateFinanceWidgetData } from "../../utils/widgetHelper";
 
 export const QuickAddScreen = () => {
   const router = useRouter();
@@ -142,9 +141,6 @@ export const QuickAddScreen = () => {
       // Refresh data
       await loadData();
 
-      // Update widget
-      await updateFinanceWidgetData();
-
       Alert.alert(
         "Saved!",
         `$${parsedAmount.toFixed(2)} added to ${selectedCategory.name}`
@@ -162,6 +158,14 @@ export const QuickAddScreen = () => {
   const monthEnd = endOfMonth(now);
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <LoadingSpinner />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>

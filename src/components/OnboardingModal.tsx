@@ -44,6 +44,13 @@ const FEATURES: Feature[] = [
     color: colors.mint,
   },
   {
+    icon: "💰",
+    title: "Finances",
+    description:
+      "Track your spending, manage your budget, and gain insights into your financial habits. Stay on top of your money with ease.",
+    color: colors.finances,
+  },
+  {
     icon: "📝",
     title: "Notes",
     description:

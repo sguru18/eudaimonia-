@@ -1,13 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   Animated,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, typography } from '../theme';
+import { colors } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,21 +49,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Animated.View
         style={[
-          styles.content,
           {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
           },
         ]}
-      >
-        <Text style={styles.title}>Eudaimonia</Text>
-        <Text style={styles.definition}>
-          a true feeling of joy independent of all things
-        </Text>
-        <Text style={styles.subtitle}>
-          Cultivate mindful living
-        </Text>
-      </Animated.View>
+      />
     </SafeAreaView>
   );
 };
@@ -83,35 +72,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
-    paddingVertical: 40,
-  },
-  content: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 20,
-  },
-  title: {
-    ...typography.headerLarge,
-    fontSize: 56,
-    color: colors.text,
-    marginBottom: 12,
-    marginTop: 0,
-  },
-  definition: {
-    ...typography.body,
-    color: colors.teal,
-    fontSize: 15,
-    fontStyle: 'italic',
-    marginBottom: 16,
-    textAlign: 'center',
-    paddingHorizontal: 40,
-    lineHeight: 22,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textLight,
-    fontSize: 16,
-    fontStyle: 'italic',
   },
 });
 

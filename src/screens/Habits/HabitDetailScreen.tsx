@@ -13,7 +13,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, typography, spacing } from '../../theme';
 import { Header, Card, Input, Button } from '../../components';
 import { habitService } from '../../services/database';
-import { updateWidgetData } from '../../utils/widgetHelper';
 import type { Habit } from '../../types';
 
 const PRESET_COLORS = [
@@ -98,8 +97,6 @@ export const HabitDetailScreen = () => {
         });
       }
       
-      // Update widget data when habits are created or updated
-      await updateWidgetData();
       router.back();
     } catch (error) {
       Alert.alert('Error', 'Failed to save habit');
@@ -122,8 +119,6 @@ export const HabitDetailScreen = () => {
           style: 'destructive',
           onPress: async () => {
             await habitService.delete(existingHabit.id);
-            // Update widget data when habit is deleted
-            await updateWidgetData();
             router.back();
           },
         },

@@ -29,6 +29,7 @@ import type {
 } from "../types";
 import { DEFAULT_EXPENSE_CATEGORIES } from "../types";
 import { supabase } from "./supabase";
+import { notificationService } from "./notifications";
 
 // Helper to get current user ID
 async function getCurrentUserId(): Promise<string> {
@@ -1529,6 +1530,11 @@ export const notificationSettingsService = {
           KEYS.NOTIFICATION_SETTINGS
         );
         await setLocalData(KEYS.NOTIFICATION_SETTINGS, [data, ...settings]);
+        
+        // Schedule notification if enabled
+        if (data.enabled) {
+          await notificationService.scheduleNotification(data);
+        }
       }
 
       return data;
@@ -1558,6 +1564,13 @@ export const notificationSettingsService = {
         );
         const updatedSettings = settings.map((s) => (s.id === id ? data : s));
         await setLocalData(KEYS.NOTIFICATION_SETTINGS, updatedSettings);
+        
+        // Update notification scheduling
+        if (data.enabled) {
+          await notificationService.scheduleNotification(data);
+        } else {
+          await notificationService.cancelNotification(id);
+        }
       }
 
       return data;
@@ -1602,6 +1615,9 @@ export const notificationSettingsService = {
         KEYS.NOTIFICATION_SETTINGS,
         settings.filter((s) => s.id !== id)
       );
+
+      // Cancel the notification
+      await notificationService.cancelNotification(id);
 
       return true;
     } catch (error) {
